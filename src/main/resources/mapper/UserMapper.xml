@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.springboot.mapper.UserMapper">
+
+    <resultMap id="pageUser" type="com.example.springboot.entity.User">
+        <result column="id" property="id" />
+        <result column="username" property="username" />
+        <result column="nickname" property="nickname" />
+        <result column="email" property="email" />
+        <result column="phone" property="phone" />
+        <result column="address" property="address" />
+        <result column="create_time" property="createTime" />
+        <result column="avatar_url" property="avatarUrl" />
+        <result column="role" property="role" />
+        <result column="domain" property="domain" />
+        <result column="office" property="office" />
+        <result column="score" property="score" />
+    </resultMap>
+
+    <select id="findPage" resultMap="pageUser">
+        select * from sys_user
+        <where>
+            <if test="username != null and username != ''">
+                and sys_user.username like concat('%', #{username} ,'%')
+            </if>
+            <if test="nickname != null and nickname != ''">
+                and sys_user.nickname like concat('%', #{nickname} ,'%')
+            </if>
+            <if test="role != null and role != ''">
+                and sys_user.role like concat('%', #{role} ,'%')
+            </if>
+            <if test="office != null and office != ''">
+                and sys_user.office like concat('%', #{office} ,'%')
+            </if>
+        </where>
+    </select>
+
+    <select id="findLawyer" resultMap="pageUser">
+        select S.username ,nickname, avatar_url, email, domain, avg(case when score is null then 5 else score end) as score
+        from sys_user S left outer join evaluate E on (S.username = E.lawyer)
+        <where>
+            (role = 'ROLE_LAWYER' or role = 'ROLE_OFFICE_ADMIN')
+            <if test="text != null and text != '' ">
+                and ( S.username like concat('%',#{text} ,'%')
+                or nickname like concat('%',#{text} ,'%')
+                or email like concat('%',#{text} ,'%')
+                or address like concat('%',#{text} ,'%') )
+            </if>
+            <if test="office != null and office != '' ">
+                and office = #{office}
+            </if>
+            <if test="domain != null and domain != '' ">
+                and domain = #{domain}
+            </if>
+        </where>
+        group by S.username,avatar_url,email
+        order by score desc
+    </select>
+
+</mapper>
